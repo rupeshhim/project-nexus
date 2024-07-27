@@ -1,0 +1,77 @@
+//defining user entity
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String username;
+    private String email;
+    private String password;
+
+    // Getters and setters
+}
+
+//creating user repository
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findByUsername(String username);
+}
+
+//creating user server
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository userRepository;
+
+    public User registerUser(User user) {
+        return userRepository.save(user);
+    }
+
+    public User authenticateUser(String username, String password) {
+        User user = userRepository.findByUsername(username);
+        if (user != null && user.getPassword().equals(password)) {
+            return user;
+        }
+        return null;
+    }
+}
+
+//creating user controller
+
+@RestController
+@RequestMapping("/api")
+public class UserController {
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody User user) {
+        try {
+            User newUser = userService.registerUser(user);
+            return ResponseEntity.ok(newUser);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Signup failed");
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
+        User user = userService.authenticateUser(loginData.get("username"), loginData.get("password"));
+        if (user != null) {
+            return ResponseEntity.ok("Login successful");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed");
+        }
+    }
+}
+
+//application properties
+
+spring.datasource
+
+
+
+
